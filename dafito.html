@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAFO RecoFast - Análisis Estratégico</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Montserrat', sans-serif; background-color: #f0f9ff; }
+        
+        /* --- ESTILOS DE LAS TARJETAS (PÍLDORAS) --- */
+        .pill-card {
+            transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            flex: 1; /* Estado inicial: todas iguales */
+            min-height: 600px;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        /* Estado Activo: Se expande */
+        .pill-card.active {
+            flex: 4; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            z-index: 10;
+        }
+
+        /* Opacidad al hacer hover en el contenedor */
+        .container-pills:hover .pill-card:not(:hover):not(.active) {
+            opacity: 0.7;
+            filter: grayscale(0.5);
+        }
+
+        /* --- ANIMACIÓN DEL CONTENIDO --- */
+        .pill-content {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease 0.1s;
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        .pill-card.active .pill-content {
+            opacity: 1;
+            transform: translateY(0);
+            max-height: 1000px; 
+            margin-top: 2rem;
+            overflow: visible;
+        }
+
+        /* --- CÍRCULOS DE CABECERA (D-A-F-O) --- */
+        .circle-header {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 900;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            border-width: 6px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- TEMAS DE COLOR --- */
+        
+        /* DEBILIDAD (Verde) */
+        .theme-d .circle-header { border-color: #84cc16; color: #3f6212; }
+        .theme-d .bg-top { background-color: #84cc16; }
+        .theme-d .pill-title { color: white; background-color: #65a30d; }
+        .theme-d.active { background-color: #f7fee7; border-color: #84cc16; }
+        .theme-d .icon-box { color: #84cc16; }
+
+        /* AMENAZA (Rojo) */
+        .theme-a .circle-header { border-color: #f43f5e; color: #881337; }
+        .theme-a .bg-top { background-color: #f43f5e; }
+        .theme-a .pill-title { color: white; background-color: #e11d48; }
+        .theme-a.active { background-color: #fff1f2; border-color: #f43f5e; }
+        .theme-a .icon-box { color: #f43f5e; }
+
+        /* FORTALEZA (Amarillo/Naranja) */
+        .theme-f .circle-header { border-color: #fbbf24; color: #78350f; }
+        .theme-f .bg-top { background-color: #fbbf24; }
+        .theme-f .pill-title { color: white; background-color: #d97706; }
+        .theme-f.active { background-color: #fffbeb; border-color: #fbbf24; }
+        .theme-f .icon-box { color: #fbbf24; }
+
+        /* OPORTUNIDAD (Azul) */
+        .theme-o .circle-header { border-color: #0ea5e9; color: #0c4a6e; }
+        .theme-o .bg-top { background-color: #0ea5e9; }
+        .theme-o .pill-title { color: white; background-color: #0284c7; }
+        .theme-o.active { background-color: #f0f9ff; border-color: #0ea5e9; }
+        .theme-o .icon-box { color: #0ea5e9; }
+        
+        /* Curva decorativa superior */
+        .bg-curve {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            height: 90px;
+            border-radius: 0 0 50% 50% / 0 0 20% 20%;
+            z-index: 0;
+        }
+
+        /* Animación Logos */
+        .logo-hover:hover { transform: scale(1.02); transition: transform 0.2s; }
+        
+        /* Placeholder de imagen si no carga */
+        .img-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f1f5f9;
+            color: #64748b;
+            font-size: 0.75rem;
+            text-align: center;
+            border: 2px dashed #cbd5e1;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-slate-50">
+
+    <!-- HEADER: LOGOS Y TÍTULO -->
+    <header class="w-full max-w-7xl flex flex-col md:flex-row justify-between items-center mb-10 px-4 gap-6">
+        
+        <!-- LOGO RECOFAST (Imagen Local) -->
+        <div class="logo-hover bg-white px-6 py-4 rounded-2xl shadow-md flex items-center justify-center border border-slate-200 h-24 min-w-[200px]">
+             <!-- 
+                 INSTRUCCIÓN: 
+                 Guarda tu imagen del logo como "logo_recofast.png" en la misma carpeta que este archivo.
+                 Si tu imagen tiene otro nombre, cámbialo en el atributo src="" de abajo.
+             -->
+             <img src="logo_recofast.png" alt="Logo RecoFast" class="max-h-16 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+             <div class="img-placeholder w-full h-full rounded-lg hidden p-2">
+                 Logo RecoFast<br>(logo_recofast.png)
+             </div>
+        </div>
+        
+        <!-- TÍTULO CENTRAL -->
+        <div class="text-center order-3 md:order-2 flex-grow">
+            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">ANÁLISIS DAFO</h1>
+            <p class="text-sm font-medium text-slate-500 mt-2 tracking-widest uppercase">Planificación Estratégica</p>
+        </div>
+
+        <!-- LOGO IES GALILEO (Imagen Local) -->
+        <div class="logo-hover bg-white px-6 py-4 rounded-2xl shadow-md flex items-center justify-center border border-slate-200 h-24 min-w-[200px] order-2 md:order-3">
+             <!-- 
+                 INSTRUCCIÓN: 
+                 Guarda tu imagen del logo como "logo_ies_galileo.png" en la misma carpeta.
+             -->
+             <img src="logo_ies_galileo.png" alt="Logo IES Galileo" class="max-h-16 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+             <div class="img-placeholder w-full h-full rounded-lg hidden p-2">
+                 Logo IES Galileo<br>(logo_ies_galileo.png)
+             </div>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR INTERACTIVO -->
+    <div class="container-pills w-full max-w-7xl flex flex-col md:flex-row gap-4 h-auto md:h-[650px]">
+
+        <!-- [D] DEBILIDAD -->
+        <div class="pill-card theme-d bg-white rounded-[40px] shadow-xl p-4 flex flex-col items-center pt-8 active" onclick="activatePill(this)">
+            <div class="bg-curve bg-top"></div>
+            <div class="circle-header shadow-lg">D</div>
+            <div class="pill-title px-6 py-2 mt-6 rounded-full font-bold text-sm tracking-widest z-10 uppercase shadow-sm">
+                Debilidad
+            </div>
+
+            <!-- Icono inferior (visible cerrado) -->
+            <div class="icon-indicator mt-auto pb-10 opacity-50 transition-all duration-300 transform translate-y-0">
+                <i data-lucide="unlink" class="w-10 h-10 icon-box"></i>
+            </div>
+
+            <!-- Contenido (Visible abierto) -->
+            <div class="pill-content text-left w-full px-4 md:px-8">
+                <h3 class="font-bold text-slate-900 text-lg mb-4 border-b pb-2 border-slate-200">Factores Internos Negativos</h3>
+                <ul class="space-y-6 text-slate-600 text-sm md:text-[15px] leading-relaxed">
+                    <li class="flex items-start group">
+                        <div class="bg-lime-100 p-2 rounded-lg mr-4 mt-1 group-hover:bg-lime-200 transition-colors">
+                            <i data-lucide="users" class="w-5 h-5 text-lime-700"></i>
+                        </div>
+                        <div>
+                            <strong class="block text-slate-900 mb-1 text-base">Dependencia de Terceros (SLA)</strong>
+                            La calidad del servicio (CX) depende de conductores autónomos, lo que dificulta la estandarización y control de la experiencia final.
+                        </div>
+                    </li>
+                    <li class="flex items-start group">
+                        <div class="bg-lime-100 p-2 rounded-lg mr-4 mt-1 group-hover:bg-lime-200 transition-colors">
+                            <i data-lucide="layers" class="w-5 h-5 text-lime-700"></i>
+                        </div>
+                        <div>
+                            <strong class="block text-slate-900 mb-1 text-base">Liquidez del Marketplace</strong>
+                            Reto inicial del "Huevo y la Gallina": Necesidad crítica de sincronizar oferta (conductores) y demanda para cumplir la promesa de inmediatez.
+                        </div>
+                    </li>
+                    <li class="flex items-start group">
+                        <div class="bg-lime-100 p-2 rounded-lg mr-4 mt-1 group-hover:bg-lime-200 transition-colors">
+                            <i data-lucide="euro" class="w-5 h-5 text-lime-700"></i>
+                        </div>
+                        <div>
+                            <strong class="block text-slate-900 mb-1 text-base">Coste vs. Gratuidad</strong>
+                            Competencia desleal percibida frente a servicios municipales subvencionados (Puntos Limpios), exigiendo una fuerte propuesta de valor.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- [A] AMENAZA -->
+        <div class="pill-card theme-a bg-white rounded-[40px] shadow-xl p-4 flex flex-col items-center pt-8" onclick="activatePill(this)">
+            <div class="bg-curve bg-top"></div>
+            <div class="circle-header shadow-lg">A</div>
+            <div class="pill-title px-6 py-2 mt-6 rounded-full font-bold text-sm tracking-widest z-10 uppercase shadow-sm">
+                Amenaza
+            </div>
+
+             <div class="icon-indicator mt-auto pb-10 opacity-50 transition-all duration-300">
+                <i data-lucide="triangle-alert" class="w-10 h-10 icon-box"></i>
+            </div>
+
+            <div class="pill-content text-left w-full px-4 md:px-8">
+                <h3 class="font-bold text-slate-900 text-lg mb-4 border-b pb-2 border-slate-200">Factores Externos Negativos</h3>
+                <ul class="space-y-6 text-slate-600 text-sm md:text-[15px] leading-relaxed">
+                    <li class="flex items-start group">
+                        <div class="bg-rose-100 p-2 rounded-lg mr-4 mt-1 group-hover:bg-rose-200 transition-colors">
+                            <i data-lucide="gavel" class="w-5 h-5 text-rose-700"></i>
+                        </div>
+                        <div>
+                            <strong class="block text-slate-900 mb-1 text-base">Riesgo Regulatorio Laboral</strong>
+                            Posible reclasificación de colaboradores ("Ley Rider") transformando costes variables en fijos y amenazando la solvencia.
+                        </div>
+                    </li>
+                    <li class="flex items-start group">
+                        <div class="bg-rose-100 p-2 rounded-lg mr-4 mt-1 group-hover:bg-rose-200 transition-colors">
+                            <i data-lucide="swords" class="w-5 h-5 text-rose-700"></i>
+                        </div>
+                        <div>
+                            <strong class="block text-slate-900 mb-1 text-base">Competencia Corporativa</strong>
+                            Entrada de grandes actores (Veolia, Urbaser) con capacidad de replicar la tecnología y aplicar precios predatorios.
+                        </div>
+                    </li>
+                    <li class="flex items-start group">
+                        <div class="bg-rose-100 p-2 rounded-lg mr-4 mt-1 group-hover:bg-rose-200 transition-colors">
+                            <i data-lucide="trending-down" class="w-5 h-5 text-rose-700"></i>
+                        </div>
+                        <div>
+                            <strong class="block text-slate-900 mb-1 text-base">Ciclo Económico</strong>
+                            Alta sensibilidad a recesiones: el usuario tiende a sacrificar "comodidad" por ahorro, volviendo a opciones gratuitas.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- [F] FORTALEZA -->
+        <div class="pill-card theme-f bg-white rounded-[40px] shadow-xl p-4 flex flex-col items-center pt-8" onclick="activatePill(this)">
+            <div class="bg-curve bg-top"></div>
+            <div class="circle-header shadow-lg">F</div>
+            <div class="pill-title px-6 py-2 mt-6 rounded-full font-bold text-sm tracking-widest z-10 uppercase shadow-sm">
+                Fortaleza
+            </div>
+
+             <div class="icon-indicator mt-auto pb-10 opacity-50 transition-all duration-300">
+                <i data-lucide="dumbbell" class="w-10 h-10 icon-box"></i>
+            </div>
+
+            <div class="pill-content text-left w-full px-4 md:px-8">
+                <h3 class="font-bold text-slate-900 text-lg mb-4 border-b pb-2 border-slate-200">Factores Internos Positivos</h3>
+                <ul class="space-y-6 text-slate-600 text-sm md:text-[15px] leading-relaxed">
+                    <li class="flex items-start group">
+                        <div class="bg-amber-100 p-2 rounded-lg mr-4 mt-1 group-hover:bg-amber-200 transition-colors">
+                            <i data-lucide="cpu" class="w-5 h-5 text-amber-700"></i>
+                        </div>
+                        <div>
+                            <strong class="block text-slate-900 mb-1 text-base">Tecnología & IA Propietaria</strong>
+                            Algoritmos de optimización logística y reconocimiento de imagen para cotización instantánea. Alta barrera tecnológica.
+                        </div>
+                    </li>
+                    <li class="flex items-start group">
+                        <div class="bg-amber-100 p-2 rounded-lg mr-4 mt-1 group-hover:bg-amber-200 transition-colors">
+                            <i data-lucide="feather" class="w-5 h-5 text-amber-700"></i>
+                        </div>
+                        <div>
+                            <strong class="block text-slate-900 mb-1 text-base">Modelo "Asset-Light"</strong>
+                            Estructura sin flota propia que permite una expansión geográfica rápida con mínimo CAPEX (Gasto de Capital).
+                        </div>
+                    </li>
+                    <li class="flex items-start group">
+                        <div class="bg-amber-100 p-2 rounded-lg mr-4 mt-1 group-hover:bg-amber-200 transition-colors">
+                            <i data-lucide="file-check-2" class="w-5 h-5 text-amber-700"></i>
+                        </div>
+                        <div>
+                            <strong class="block text-slate-900 mb-1 text-base">Trazabilidad Certificada</strong>
+                            Emisión automática de certificados de reciclaje, un activo crítico para el cumplimiento normativo (Compliance) de clientes B2B.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- [O] OPORTUNIDAD -->
+        <div class="pill-card theme-o bg-white rounded-[40px] shadow-xl p-4 flex flex-col items-center pt-8" onclick="activatePill(this)">
+            <div class="bg-curve bg-top"></div>
+            <div class="circle-header shadow-lg">O</div>
+            <div class="pill-title px-6 py-2 mt-6 rounded-full font-bold text-sm tracking-widest z-10 uppercase shadow-sm">
+                Oportunidad
+            </div>
+
+             <div class="icon-indicator mt-auto pb-10 opacity-50 transition-all duration-300">
+                <i data-lucide="bar-chart-3" class="w-10 h-10 icon-box"></i>
+            </div>
+
+            <div class="pill-content text-left w-full px-4 md:px-8">
+                <h3 class="font-bold text-slate-900 text-lg mb-4 border-b pb-2 border-slate-200">Factores Externos Positivos</h3>
+                <ul class="space-y-6 text-slate-600 text-sm md:text-[15px] leading-relaxed">
+                    <li class="flex items-start group">
+                        <div class="bg-sky-100 p-2 rounded-lg mr-4 mt-1 group-hover:bg-sky-200 transition-colors">
+                            <i data-lucide="scale" class="w-5 h-5 text-sky-700"></i>
+                        </div>
+                        <div>
+                            <strong class="block text-slate-900 mb-1 text-base">Marco Regulatorio ESG</strong>
+                            Normativas de Economía Circular exigen trazabilidad. RecoFast se posiciona como el habilitador tecnológico ideal.
+                        </div>
+                    </li>
+                    <li class="flex items-start group">
+                        <div class="bg-sky-100 p-2 rounded-lg mr-4 mt-1 group-hover:bg-sky-200 transition-colors">
+                            <i data-lucide="recycle" class="w-5 h-5 text-sky-700"></i>
+                        </div>
+                        <div>
+                            <strong class="block text-slate-900 mb-1 text-base">Minería Urbana</strong>
+                            Nueva fuente de ingresos (Revenue Stream) mediante la recuperación y venta de materias primas críticas (RAEE, metales).
+                        </div>
+                    </li>
+                    <li class="flex items-start group">
+                        <div class="bg-sky-100 p-2 rounded-lg mr-4 mt-1 group-hover:bg-sky-200 transition-colors">
+                            <i data-lucide="building-2" class="w-5 h-5 text-sky-700"></i>
+                        </div>
+                        <div>
+                            <strong class="block text-slate-900 mb-1 text-base">Escalabilidad B2B2C</strong>
+                            Alianzas con Property Managers e inmobiliarias para integrar el servicio como un "utility" estándar del edificio.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 1. Inicializar iconos
+        lucide.createIcons();
+
+        // 2. Lógica de Interacción
+        function activatePill(element) {
+            const allPills = document.querySelectorAll('.pill-card');
+            
+            // Si ya está activo, no hacemos nada
+            if (element.classList.contains('active')) return;
+
+            // Desactivar todos
+            allPills.forEach(pill => {
+                pill.classList.remove('active');
+                
+                // Mostrar icono inferior de nuevo
+                const icon = pill.querySelector('.icon-indicator');
+                icon.style.display = 'block';
+                setTimeout(() => { icon.style.opacity = '0.5'; }, 50);
+            });
+
+            // Activar el seleccionado
+            element.classList.add('active');
+            
+            // Ocultar el icono inferior del activo
+            const activeIcon = element.querySelector('.icon-indicator');
+            activeIcon.style.opacity = '0';
+            setTimeout(() => { activeIcon.style.display = 'none'; }, 300);
+        }
+
+        // 3. Ajuste inicial
+        document.addEventListener("DOMContentLoaded", () => {
+             const activePillIcon = document.querySelector('.pill-card.active .icon-indicator');
+             if(activePillIcon) {
+                 activePillIcon.style.opacity = '0';
+                 activePillIcon.style.display = 'none';
+             }
+        });
+    </script>
+</body>
+</html>
